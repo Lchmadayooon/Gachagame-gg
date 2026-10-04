@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GACHA GAME</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,sans-serif}
+body{
+    background:linear-gradient(135deg,#10051d,#28103b,#0b0614);
+    color:#fff;
+    max-width:600px;
+    margin:auto;
+    overflow-x:hidden
+}
+button,input,select{font:inherit}
+button{
+    border:0;border-radius:12px;padding:12px;
+    background:#442064;color:white;font-weight:bold;
+    cursor:pointer
+}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+input,select{
+    width:100%;padding:12px;border:1px solid #75489b;
+    border-radius:10px;background:#160b22;color:white
+}
+.hidden{display:none!important}
+
+#app{min-height:100vh;padding-bottom:85px}
+header{
+    padding:16px;text-align:center;
+    background:#160a22;border-bottom:1px solid #44245d;
+    position:sticky;top:0;z-index:100
+}
+header h1{margin:0;font-size:24px}
+.coins{margin-top:6px;color:#ffd75a;font-weight:bold}
+
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+
+.card{
+    background:rgba(35,17,50,.9);
+    border:1px solid #54306e;
+    border-radius:16px;
+    padding:15px;
+    margin-bottom:14px
+}
+.card h3{margin-top:0}
+
+.menu-grid,.pull-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px
+}
+.menu-grid button{min-height:75px}
+.pull-grid button{min-height:65px}
+
+.small{font-size:12px;color:#bbb}
+.center{text-align:center}
+.big{font-size:28px;font-weight:bold}
+
+.probability{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:7px;
+    font-size:13px
+}
+.probability div{
+    background:#21102e;
+    padding:8px;
+    border-radius:8px
+}
+
+.result-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px
+}
+.result-card{
+    border-radius:14px;
+    padding:13px;
+    text-align:center;
+    min-height:130px;
+    background:#21102e;
+    border:2px solid #4a2860
+}
+.result-card .icon{font-size:42px}
+.result-card .name{font-weight:bold;margin:5px 0}
+.result-card .duplicate{color:#ffd34f;font-size:13px}
+
+.collection-grid,.item-grid,.achievement-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px
+}
+.collection-card,.item-card,.achievement-card{
+    padding:12px;
+    border-radius:14px;
+    background:#21102e;
+    border:2px solid #4a2860;
+    text-align:center
+}
+.collection-card .icon,.item-card .icon{
+    font-size:40px
+}
+.locked-card{
+    opacity:.35;
+    filter:grayscale(1)
+}
+.achievement-card.locked{
+    opacity:.3;
+    filter:grayscale(1)
+}
+.achievement-card.unlocked{
+    opacity:1;
+    filter:none;
+    box-shadow:0 0 18px rgba(255,255,255,.2)
+}
+
+.rarity-N{border-color:#aaa}
+.rarity-R{border-color:#62a5ff}
+.rarity-SR{border-color:#b56cff}
+.rarity-SSR{border-color:#ffb52e}
+.rarity-UR{border-color:#ff58d1}
+.rarity-SECRET{
+    border-color:#36f6d1;
+    box-shadow:0 0 15px #20e0c0
+}
+.rarity-ADMIN{
+    border-color:#ff3030;
+    box-shadow:0 0 15px #ff2020
+}
+.rarity-EX{
+    border-color:#ffd83d;
+    background:linear-gradient(135deg,#7b431f,#d6aa2d,#8e2020,#f4d447);
+    background-size:300% 300%;
+    animation:marble 5s ease infinite
+}
+@keyframes marble{
+    0%{background-position:0 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0 50%}
+}
+
+.badge{
+    display:inline-block;
+    padding:4px 8px;
+    border-radius:8px;
+    background:#352047;
+    font-size:12px
+}
+
+.shop-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px
+}
+.shop-info{flex:1}
+
+.bottom-nav{
+    position:fixed;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(600px,100%);
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    background:#12081b;
+    border-top:1px solid #4a2860;
+    z-index:1500
+}
+.bottom-nav button{
+    border-radius:0;
+    background:#170b22;
+    font-size:12px;
+    padding:12px 4px
+}
+
+#nameOverlay,#orientationOverlay,#gachaLockOverlay{
+    position:fixed;
+    inset:0;
+    z-index:3000;
+    background:#09030d;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:25px
+}
+.overlay-box{
+    width:min(430px,100%);
+    text-align:center
+}
+#orientationOverlay{z-index:4000}
+#gachaLockOverlay{
+    z-index:2500;
+    background:rgba(5,2,8,.78);
+    backdrop-filter:blur(3px)
+}
+.overlay-title{font-size:25px;font-weight:bold;margin-bottom:12px}
+
+.admin-panel{
+    border:2px solid #e33;
+    background:#24090d
+}
+.admin-panel h3{color:#ff6868}
+
+#starContainer{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:2000
+}
+.star{
+    position:absolute;
+    top:-30px;
+    animation:fall linear forwards;
+    text-shadow:0 0 8px currentColor
+}
+.star.ssr{color:#ffae32}
+.star.ur{color:#ff59d7}
+.star.secret{color:#fff}
+.star.admin{color:#ff3030}
+@keyframes fall{
+    to{
+        transform:translateY(110vh) rotate(720deg);
+        opacity:0
+    }
+}
+
+@keyframes gachaShake{
+    0%,100%{transform:translate(0,0)}
+    10%{transform:translate(-3px,2px)}
+    20%{transform:translate(3px,-2px)}
+    30%{transform:translate(-2px,-3px)}
+    40%{transform:translate(3px,2px)}
+    50%{transform:translate(-3px,-1px)}
+    60%{transform:translate(2px,3px)}
+    70%{transform:translate(-2px,-2px)}
+    80%{transform:translate(3px,1px)}
+    90%{transform:translate(-1px,2px)}
+}
+body.gacha-shaking #app{animation:gachaShake .09s infinite}
+
+.progress{
+    height:10px;
+    background:#120818;
+    border-radius:10px;
+    overflow:hidden;
+    margin:8px 0
+}
+.progress>div{
+    height:100%;
+    background:#a95cff;
+    width:0%
+}
+
+@media(max-width:380px){
+    .collection-grid,.item-grid,.achievement-grid,.result-grid{
+        grid-template-columns:1fr
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="nameOverlay">
+    <div class="overlay-box">
+        <div class="overlay-title">🎰 GACHA GAME</div>
+        <p>名前を入力してゲームを始めよう！</p>
+        <input id="nameInput" maxlength="20" placeholder="名前を入力">
+        <br><br>
+        <button onclick="setPlayerName()">▶ この名前で始める</button>
+    </div>
+</div>
+
+<div id="orientationOverlay" class="hidden">
+    <div class="overlay-box">
+        <div class="overlay-title">📱 縦画面にしてください</div>
+        <p>このゲームは縦画面でプレイしてください。</p>
+    </div>
+</div>
+
+<div id="gachaLockOverlay" class="hidden">
+    <div class="overlay-box">
+        <div class="overlay-title" id="gachaLockText">✨ ガチャ演出中…</div>
+        <p>演出が終わるまで操作できません。</p>
+    </div>
+</div>
+
+<div id="starContainer"></div>
+
+<div id="app">
+
+<header>
+    <h1>🎰 GACHA GAME</h1>
+    <div class="coins">🪙 <span id="coinDisplay">0</span> コイン</div>
+</header>
+
+<!-- MENU -->
+<section id="menu" class="screen active">
+    <div class="card center">
+        <h2 id="welcomeText">ようこそ！</h2>
+        <p>好きなところから遊ぼう！</p>
+    </div>
+
+    <div class="menu-grid">
+        <button onclick="showScreen('gacha')">🎰<br>ガチャ</button>
+        <button onclick="showScreen('mini')">🎯<br>ミニゲーム</button>
+        <button onclick="showScreen('collection')">📖<br>図鑑</button>
+        <button onclick="showScreen('items')">🎒<br>アイテム</button>
+        <button onclick="showScreen('login')">🎁<br>ログイン</button>
+        <button onclick="showScreen('shop')">🛒<br>ショップ</button>
+        <button class="locked" onclick="showScreen('rare')">🌑<br>レアガチャ</button>
+        <button onclick="showScreen('settings')">⚙️<br>設定</button>
+    </div>
+</section>
+
+<!-- GACHA -->
+<section id="gacha" class="screen">
+    <div class="card center">
+        <h2>🎰 ガチャ</h2>
+        <p>1回：100コイン　10回：900コイン</p>
+
+        <div class="probability">
+            <div>N：54.9%</div>
+            <div>R：30%</div>
+            <div>SR：10%</div>
+            <div>SSR：5%</div>
+            <div>UR：0.1%</div>
+        </div>
+
+        <p class="small">※SECRETの確率は公開されていません。</p>
+    </div>
+
+    <div id="pullButtons" class="pull-grid"></div>
+
+    <div id="gachaResults"></div>
+</section>
+
+<!-- RARE -->
+<section id="rare" class="screen">
+    <div class="card center">
+        <div class="big">🌑</div>
+        <h2>レアガチャ</h2>
+        <p>🔒 現在準備中</p>
+    </div>
+</section>
+
+<!-- MINI -->
+<section id="mini" class="screen">
+    <div class="card">
+        <h2>🎯 ミニゲーム</h2>
+        <div class="menu-grid">
+            <button onclick="startTargetGame()">🎯 ターゲット</button>
+            <button onclick="showChinchiro()">🎲 チンチロ</button>
+            <button onclick="showLuck()">🍀 運試し</button>
+        </div>
+    </div>
+
+    <div id="targetGame" class="card hidden center">
+        <h3>🎯 ターゲット</h3>
+        <div class="big" id="targetScore">0</div>
+        <p>残り <span id="targetTime">30</span> 秒</p>
+        <button id="targetButton" onclick="hitTarget()">🎯</button>
+        <p class="small">たまに 🍩 ゴールドドーナツが出現！</p>
+    </div>
+
+    <div id="chinchiroGame" class="card hidden">
+        <h3>🎲 チンチロ</h3>
+        <p>ゾロ目だけが当たりです。</p>
+        <select id="chinchiroBet">
+            <option value="100">100コイン</option>
+            <option value="300">300コイン</option>
+            <option value="500">500コイン</option>
+            <option value="1000">1000コイン</option>
+        </select>
+        <button onclick="playChinchiro()">🎲 振る</button>
+        <div id="chinchiroResult" class="center"></div>
+    </div>
+
+    <div id="luckGame" class="card hidden">
+        <h3>🍀 運試し</h3>
+        <input id="luckBet" type="number" min="1" placeholder="賭けるコイン">
+        <br><br>
+        <select id="luckChoice">
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3">3</option><option value="4">4</option>
+            <option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option>
+            <option value="9">9</option><option value="10">10</option>
+        </select>
+        <button onclick="playLuck()">🍀 運試し</button>
+        <div id="luckResult" class="center"></div>
+    </div>
+</section>
+
+<!-- COLLECTION -->
+<section id="collection" class="screen">
+    <div id="collectionLocked" class="card center hidden">
+        <div class="big">🔒</div>
+        <h2>図鑑未開放</h2>
+        <p>現在この図鑑はロックされています。</p>
+    </div>
+
+    <div id="collectionContent">
+        <div class="card center">
+            <h2>📖 キャラクター図鑑</h2>
+            <div class="big" id="collectionCount">0/0</div>
+            <p class="small">SECRET・ADMINはカウント対象外</p>
+        </div>
+
+        <div id="characterCollection" class="collection-grid"></div>
+
+        <div class="card">
+            <h2>🏆 実績</h2>
+            <div id="achievementCollection" class="achievement-grid"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ITEMS -->
+<section id="items" class="screen">
+    <div class="card">
+        <h2>🎒 アイテム</h2>
+        <div id="inventory"></div>
+    </div>
+
+    <div class="card">
+        <h2>📚 アイテム一覧</h2>
+        <div id="itemCollection" class="item-grid"></div>
+    </div>
+</section>
+
+<!-- LOGIN -->
+<section id="login" class="screen">
+    <div class="card center">
+        <h2>🎁 ログインボーナス</h2>
+        <div id="loginContent"></div>
+    </div>
+</section>
+
+<!-- SHOP -->
+<section id="shop" class="screen">
+    <div class="card">
+        <h2>🛒 ショップ</h2>
+        <div id="shopContent"></div>
+    </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="settings" class="screen">
+    <div class="card">
+        <h2>⚙️ 設定</h2>
+
+        <h3>⏭️ ガチャ演出スキップ</h3>
+        <button id="skipButton" onclick="toggleGachaSkip()">
+            ガチャ演出スキップ：OFF
+        </button>
+        <p class="small">
+            ONにすると、ガチャの画面揺れ・星の演出をすべてスキップします。
+        </p>
+    </div>
+
+    <div class="card">
+        <h3>🎟️ コード入力</h3>
+        <input id="codeInput" placeholder="コードを入力">
+        <br><br>
+        <button onclick="redeemCode()">🎁 コードを使用</button>
+    </div>
+
+    <div class="card">
+        <h3>👤 プレイヤー名</h3>
+        <input id="renameInput" maxlength="20" placeholder="新しい名前">
+        <br><br>
+        <button onclick="renamePlayer()">名前を変更</button>
+    </div>
+
+    <div class="card admin-panel">
+        <h3>🔴 ADMIN</h3>
+        <input id="adminCode" placeholder="ADMINコード">
+        <br><br>
+        <button onclick="unlockAdmin()">ADMINログイン</button>
+
+        <div id="adminContent" class="hidden">
+            <hr>
+
+            <h3>🪙 コイン設定</h3>
+            <input id="adminCoins" type="number" placeholder="コイン数">
+            <button onclick="adminSetCoins()">設定</button>
+
+            <h3>🎰 ガチャキャラ固定</h3>
+            <select id="adminCharacter"></select>
+            <button onclick="adminSetGachaCharacter()">固定する</button>
+            <button onclick="adminClearGachaCharacter()">解除</button>
+
+            <h3>🎲 チンチロ強制</h3>
+            <select id="adminChinchiro">
+                <option value="">なし</option>
+                <option value="1">111</option>
+                <option value="2">222</option>
+                <option value="3">333</option>
+                <option value="4">444</option>
+                <option value="5">555</option>
+                <option value="6">666</option>
+            </select>
+            <button onclick="adminSetChinchiro()">設定</button>
+
+            <h3>🍀 運試し強制</h3>
+            <select id="adminLuck">
+                <option value="">なし</option>
+                <option value="1">1</option><option value="2">2</option>
+                <option value="3">3</option><option value="4">4</option>
+                <option value="5">5</option><option value="6">6</option>
+                <option value="7">7</option><option value="8">8</option>
+                <option value="9">9</option><option value="10">10</option>
+            </select>
+            <button onclick="adminSetLuck()">設定</button>
+
+            <h3>📖 図鑑</h3>
+            <button onclick="adminCollection(true)">🔓 図鑑を解放</button>
+            <button onclick="adminCollection(false)">🔒 図鑑をロック</button>
+
+            <h3>📖 キャラクター操作</h3>
+            <select id="adminGiveCharacter"></select>
+            <button onclick="adminGiveCharacter()">入手</button>
+
+            <h3>🎰 任意回数ガチャ</h3>
+            <input id="adminGachaCount" type="number" min="1" placeholder="回数">
+            <button onclick="adminGacha()">無料で引く</button>
+
+            <h3>🎒 アイテム付与</h3>
+            <select id="adminGiveItem"></select>
+            <input id="adminItemAmount" type="number" min="1" placeholder="個数">
+            <button onclick="adminGiveItem()">付与</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>🗑️ データ削除</h3>
+        <button onclick="deleteGameData()">ゲームデータをすべて削除</button>
+    </div>
+</section>
+
+</div>
+
+<nav class="bottom-nav">
+    <button onclick="showScreen('menu')">🏠<br>メニュー</button>
+    <button onclick="showScreen('gacha')">🎰<br>ガチャ</button>
+    <button onclick="showScreen('collection')">📖<br>図鑑</button>
+    <button onclick="showScreen('settings')">⚙️<br>設定</button>
+</nav>
+
+<audio id="bgm" src="music/gacha.mp3" loop preload="auto"></audio>
+
+<script>
+/* =========================
+   データ
+========================= */
+
+const characters=[
+{id:"slime",rarity:"N",icon:"🟢",name:"スライム",description:"どこにでもいる普通のスライム。"},
+{id:"grapeman",rarity:"R",icon:"🍇",name:"グレープマン",description:"ぶどうの力を身につけた謎の戦士。"},
+{id:"gemgolem",rarity:"SR",icon:"🪨",name:"ジェムゴーレム",description:"宝石の力を宿したゴーレム。"},
+{id:"kingearth",rarity:"SSR",icon:"👑🌎",name:"キングアース",description:"大地を支配する王。圧倒的な力を持つ。"},
+{id:"undeadslime",rarity:"UR",icon:"💀⚫️",name:"アンデッドスライム",description:"死を超越した異形のスライム。"},
+{id:"emperorcrystal",rarity:"SECRET",icon:"💎",name:"エンペラークリスタル",description:"美しい色を放つクリスタル、この世界の皇帝達が装飾していたと言われる"},
+{id:"admincrown",rarity:"ADMIN",icon:"👑",name:"アドミンクラウン",description:"管理者の王冠を模したモンスター。"},
+{id:"cakecalendar",rarity:"N",icon:"🎂🗓️",name:"ケーキカレンダー",description:"ケーキのモンスターが擬態したカレンダー、とても甘い"},
+{id:"busgasboom",rarity:"N",icon:"🚌💥",name:"バスガスブーム",description:"バスがガスでブーム！"},
+{id:"woodcrystal",rarity:"R",icon:"🌳",name:"ウッドクリスタル",description:"木のクリスタル、研いだら綺麗になる"},
+{id:"fireegg",rarity:"R",icon:"🔥🥚",name:"ファイアーエッグ",description:"炎に包まれた卵、中身は羽化しているらしい"},
+{id:"caesareye",rarity:"SR",icon:"✂️👀",name:"シーザーアイ",description:"目のついたハサミ、陽気な動きをしている"},
+{id:"waterbread",rarity:"SR",icon:"🍞💧",name:"ウォーターブレッド",description:"濡れたパンのような見た目のモンスター"},
+{id:"angrysword",rarity:"SSR",icon:"⚔️💢",name:"アングリーソード",description:"怒っている剣のモンスター、切れ味が良い"},
+{id:"castleblossom",rarity:"SSR",icon:"🏰🌸",name:"キャッスルブロッサム",description:"花で囲まれた大きな城型のモンスター"},
+{id:"ghostwheel",rarity:"UR",icon:"👻🎡",name:"ゴーストホイール",description:"半透明な巨大観覧車。人々に親しまれた結果に倒壊後、幽霊となってしまった"},
+{id:"halloween",rarity:"EX",icon:"👻🎃🍭",name:"ハロウィンマン",description:"ハッピーハロウィン！",limited:true}
+];
+
+const items={
+tvbeer:{
+    id:"tvbeer",icon:"📺🍻",name:"テレビール",
+    description:"テレビの容器に入ったビール",
+    acquisition:"ショップ / コード"
+},
+golddonut:{
+    id:"golddonut",icon:"🍩🟨",name:"ゴールドドーナツ",
+    description:"金色のドーナツ",
+    acquisition:"ターゲットミニゲーム"
+},
+redpotion:{
+    id:"redpotion",icon:"🍷",name:"レッドポーション",
+    description:"次のチンチロで選んだ数字を2個固定する",
+    acquisition:"コード・ショップ"
+},
+pumpkinpotion:{
+    id:"pumpkinpotion",icon:"🎃",name:"パンプキンポーション",
+    description:"EX「ハロウィンマン」を入手できる",
+    acquisition:"コード",
+    hiddenEncyclopedia:true
+}
+};
+
+const achievements=[
+{id:"a100",name:"ガチャ好き",need:100,reward:"テレビール ×1"},
+{id:"a500",name:"ガチャ大好き",need:500,reward:"テレビール ×3"},
+{id:"a1000",name:"ガチャマスター",need:1000,reward:"テレビール ×3"},
+{id:"a10000",name:"ガチャゴッド",need:10000,reward:"全アイテム ×5"}
+];
+
+const codes={
+"Gacha2026":{coins:300},
+"Release":{coins:500},
+"Lchama":{coins:300},
+"Superluck":{coins:300},
+"King":{coins:500},
+"Waho!":{coins:2000},
+"GachaGacha":{coins:500},
+"Revamp":{coins:1000},
+"NewCharacter":{coins:1000},
+"Mimigame":{coins:500},
+"TBeer":{items:{tvbeer:1}},
+"Redred":{items:{redpotion:1}},
+"Dancetime":{coins:3000,items:{tvbeer:1}},
+"WKENSIN":{coins:1000,items:{golddonut:1}},
+"Halloween":{coins:300,items:{pumpkinpotion:1}}
+};
+
+/* =========================
+   保存データ
+========================= */
+
+let coins=Number(localStorage.getItem("coins")||0);
+let discovered=JSON.parse(localStorage.getItem("discovered")||"[]");
+let redeemedCodes=JSON.parse(localStorage.getItem("redeemedCodes")||"[]");
+let itemsInventory=JSON.parse(localStorage.getItem("itemsInventory")||"{}");
+let unlockedPulls=JSON.parse(localStorage.getItem("unlockedPulls")||'{"30":false,"50":false,"100":false}');
+let playerName=localStorage.getItem("playerName")||"";
+let highScore=Number(localStorage.getItem("targetHighScore")||0);
+let lastLogin=localStorage.getItem("lastLogin")||"";
+let gachaCount=Number(localStorage.getItem("gachaCount")||0);
+let achievementsClaimed=JSON.parse(localStorage.getItem("achievementsClaimed")||"[]");
+let collectionUnlocked=localStorage.getItem("collectionUnlocked")!=="false";
+let gachaSkip=localStorage.getItem("gachaSkip")==="true";
+
+let adminUnlocked=false;
+let adminForcedGachaCharacter=null;
+let adminForcedChinchiroNumber=null;
+let adminForcedLuckNumber=null;
+
+let tvBeerActive=false;
+let redPotionTarget=null;
+
+let chinchiroBetRounds=0;
+let chinchiroMultiplier=1;
+let chinchiroCooldown=0;
+let chinchiroCooldownTimer=null;
+
+let targetScore=0;
+let targetRunning=false;
+let targetTimer=null;
+let targetSpawnTimer=null;
+
+let currentGachaResults=[];
+let displayedResultCount=0;
+let gachaBusy=false;
+
+const bgm=document.getElementById("bgm");
+
+/* =========================
+   共通
+========================= */
+
+function save(key,value){
+    localStorage.setItem(key,JSON.stringify(value));
+}
+
+function updateCoins(){
+    document.getElementById("coinDisplay").textContent=coins;
+}
+
+function addCoins(n){
+    coins+=n;
+    localStorage.setItem("coins",coins);
+    updateCoins();
+}
+
+function spendCoins(n){
+    if(coins<n){
+        alert("コインが足りません！");
+        return false;
+    }
+    coins-=n;
+    localStorage.setItem("coins",coins);
+    updateCoins();
+    return true;
+}
+
+function addItem(id,n=1){
+    itemsInventory[id]=(itemsInventory[id]||0)+n;
+    save("itemsInventory",itemsInventory);
+}
+
+function removeItem(id,n=1){
+    if((itemsInventory[id]||0)<n)return false;
+    itemsInventory[id]-=n;
+    if(itemsInventory[id]<=0)delete itemsInventory[id];
+    save("itemsInventory",itemsInventory);
+    return true;
+}
+
+function getCharacter(id){
+    return characters.find(c=>c.id===id);
+}
+
+function obtainCharacter(character){
+    if(discovered.includes(character.id)){
+        addCoins(50);
+        return true;
+    }
+
+    discovered.push(character.id);
+    save("discovered",discovered);
+    return false;
+}
+
+function showScreen(id){
+    if(gachaBusy)return;
+
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+
+    if(id==="collection")renderCharacterCollection();
+    if(id==="items"){
+        renderInventory();
+        renderItemCollection();
+    }
+    if(id==="shop")renderShop();
+    if(id==="login")renderLogin();
+
+    startBgmOnce();
+}
+
+function updateAll(){
+    updateCoins();
+    renderPullButtons();
+    renderCharacterCollection();
+    renderAchievementCollection();
+    renderInventory();
+    renderItemCollection();
+    renderShop();
+    renderLogin();
+    updateSkipButton();
+}
+
+/* =========================
+   名前
+========================= */
+
+function setPlayerName(){
+    const input=document.getElementById("nameInput");
+    const name=input.value.trim();
+
+    if(!name){
+        alert("名前を入力してください！");
+        return;
+    }
+
+    playerName=name.slice(0,20);
+    localStorage.setItem("playerName",playerName);
+    document.getElementById("nameOverlay").classList.add("hidden");
+    updateOrientation();
+    document.getElementById("welcomeText").textContent=`ようこそ、${playerName}さん！`;
+    startBgmOnce();
+}
+
+function renamePlayer(){
+    const name=document.getElementById("renameInput").value.trim();
+
+    if(!name)return alert("名前を入力してください！");
+
+    playerName=name.slice(0,20);
+    localStorage.setItem("playerName",playerName);
+    document.getElementById("welcomeText").textContent=`ようこそ、${playerName}さん！`;
+    document.getElementById("renameInput").value="";
+    alert("名前を変更しました！");
+}
+
+function updateOrientation(){
+    const nameOverlay=document.getElementById("nameOverlay");
+    const input=document.getElementById("nameInput");
+    const allowLandscape=
+        !nameOverlay.classList.contains("hidden") ||
+        document.activeElement===input;
+
+    const landscape=window.innerWidth>window.innerHeight;
+
+    document.getElementById("orientationOverlay")
+        .classList.toggle("hidden",!landscape||allowLandscape);
+}
+
+window.addEventListener("resize",updateOrientation);
+window.addEventListener("orientationchange",updateOrientation);
+document.getElementById("nameInput").addEventListener("focus",updateOrientation);
+document.getElementById("nameInput").addEventListener("blur",updateOrientation);
+
+/* =========================
+   ガチャ
+========================= */
+
+function pickRarity(){
+    const r=Math.random()*100;
+
+    if(r<54.89)return"N";
+    if(r<84.89)return"R";
+    if(r<94.89)return"SR";
+    if(r<99.89)return"SSR";
+    if(r<99.99)return"UR";
+    return"SECRET";
+}
+
+function pickNormalCharacter(){
+    if(adminForcedGachaCharacter)
+        return getCharacter(adminForcedGachaCharacter);
+
+    if(tvBeerActive){
+        tvBeerActive=false;
+
+        const r=Math.random()*100;
+
+        if(r<80)return randomCharacter("SR");
+        if(r<95)return randomCharacter("SSR");
+        if(r<99)return randomCharacter("UR");
+        return randomCharacter("SECRET");
+    }
+
+    return randomCharacter(pickRarity());
+}
+
+function randomCharacter(rarity){
+    const list=characters.filter(c=>c.rarity===rarity);
+    return list[Math.floor(Math.random()*list.length)];
+}
+
+function pickGuaranteedCharacter(){
+    if(adminForcedGachaCharacter)
+        return getCharacter(adminForcedGachaCharacter);
+
+    if(tvBeerActive)
+        return pickNormalCharacter();
+
+    const r=Math.random()*100;
+
+    if(r<66.22)return randomCharacter("SR");
+    if(r<99.34)return randomCharacter("SSR");
+    if(r<99.89)return randomCharacter("UR");
+    return randomCharacter("SECRET");
+}
+
+function rarityRank(r){
+    return {
+        "SECRET":6,
+        "ADMIN":5,
+        "UR":4,
+        "SSR":3,
+        "SR":2,
+        "R":1,
+        "N":0,
+        "EX":7
+    }[r]??0;
+}
+
+function getHighestRarity(results){
+    return results.reduce(
+        (best,c)=>rarityRank(c.rarity)>rarityRank(best.rarity)?c:best,
+        results[0]
+    ).rarity;
+}
+
+function doGacha(count,cost=0,free=false){
+    if(gachaBusy)return;
+
+    if(!free&&!spendCoins(cost))return;
+
+    const results=[];
+    let duplicateCoins=0;
+
+    for(let i=0;i<count;i++){
+        const character=
+            count>=10&&i===count-1
+            ?pickGuaranteedCharacter()
+            :pickNormalCharacter();
+
+        if(discovered.includes(character.id))
+            duplicateCoins+=50;
+        else{
+            discovered.push(character.id);
+        }
+
+        results.push({
+            ...character,
+            duplicate:discovered.slice(0,-1).includes(character.id)
+        });
+    }
+
+    if(duplicateCoins)addCoins(duplicateCoins);
+
+    save("discovered",discovered);
+
+    gachaCount+=count;
+    localStorage.setItem("gachaCount",gachaCount);
+
+    checkAchievements();
+
+    currentGachaResults=results;
+    displayedResultCount=0;
+    showGachaResults(results);
+
+    startGachaEffect(getHighestRarity(results));
+}
+
+function renderPullButtons(){
+    const box=document.getElementById("pullButtons");
+
+    const pulls=[
+        {n:1,cost:100},
+        {n:10,cost:900}
+    ];
+
+    if(unlockedPulls["30"])pulls.push({n:30,cost:3000});
+    if(unlockedPulls["50"])pulls.push({n:50,cost:5000});
+    if(unlockedPulls["100"])pulls.push({n:100,cost:15000});
+
+    box.innerHTML=pulls.map(p=>
+        `<button onclick="doGacha(${p.n},${p.cost})">
+            🎰 ${p.n}連<br>${p.cost.toLocaleString()}コイン
+        </button>`
+    ).join("");
+}
+
+function showGachaResults(results){
+    const box=document.getElementById("gachaResults");
+
+    box.innerHTML=`
+        <div class="card">
+            <h3>🎉 ガチャ結果</h3>
+            <div id="visibleResults" class="result-grid"></div>
+            <div id="moreResults"></div>
+        </div>
+    `;
+
+    renderVisibleResults();
+}
+
+function renderVisibleResults(){
+    const box=document.getElementById("visibleResults");
+    const more=document.getElementById("moreResults");
+
+    const end=Math.min(displayedResultCount+10,currentGachaResults.length);
+    if(displayedResultCount===0)displayedResultCount=0;
+
+    box.innerHTML+=currentGachaResults
+        .slice(displayedResultCount,end)
+        .map(c=>`
+            <div class="result-card rarity-${c.rarity}">
+                <div class="icon">${c.icon}</div>
+                <div class="badge">${c.rarity}</div>
+                <div class="name">${c.name}</div>
+                ${c.duplicate
+                    ?`<div class="duplicate">重複！ +50コイン</div>`
+                    :`<div class="small">NEW!</div>`}
+            </div>
+        `).join("");
+
+    displayedResultCount=end;
+
+    more.innerHTML=
+        displayedResultCount<currentGachaResults.length
+        ?`<button onclick="renderVisibleResults()">さらに表示</button>`
+        :"";
+}
+
+function startGachaEffect(rarity){
+    if(gachaSkip){
+        gachaBusy=true;
+        setTimeout(()=>gachaBusy=false,1000);
+        return;
+    }
+
+    gachaBusy=true;
+
+    const overlay=document.getElementById("gachaLockOverlay");
+    const text=document.getElementById("gachaLockText");
+
+    overlay.classList.remove("hidden");
+    text.textContent="✨ ガチャ演出中…";
+
+    document.body.classList.add("gacha-shaking");
+
+    setTimeout(()=>{
+        document.body.classList.remove("gacha-shaking");
+        text.textContent="🌟 レアリティ演出！";
+        createStars(rarity);
+
+        setTimeout(()=>{
+            overlay.classList.add("hidden");
+            gachaBusy=false;
+        },1000);
+
+    },2000);
+}
+
+function createStars(rarity){
+    const box=document.getElementById("starContainer");
+
+    const amount={
+        SSR:20,
+        UR:45,
+        SECRET:60,
+        ADMIN:35,
+        EX:50
+    }[rarity]||0;
+
+    if(!amount)return;
+
+    for(let i=0;i<amount;i++){
+        const star=document.createElement("div");
+        star.className=`star ${rarity.toLowerCase()}`;
+        star.textContent="★";
+        star.style.left=Math.random()*100+"%";
+        star.style.fontSize=(10+Math.random()*18)+"px";
+        star.style.animationDuration=(2+Math.random()*2)+"s";
+        star.style.animationDelay=Math.random()*.5+"s";
+
+        if(rarity==="SECRET"){
+            const colors=["red","yellow","lime","cyan","blue","violet"];
+            star.style.color=colors[i%colors.length];
+        }
+
+        box.appendChild(star);
+        setTimeout(()=>star.remove(),5000);
+    }
+}
+
+/* =========================
+   実績
+========================= */
+
+function checkAchievements(){
+    achievements.forEach(a=>{
+        if(gachaCount>=a.need&&!achievementsClaimed.includes(a.id)){
+            achievementsClaimed.push(a.id);
+            save("achievementsClaimed",achievementsClaimed);
+
+            if(a.id==="a100")addItem("tvbeer",1);
+            if(a.id==="a500")addItem("tvbeer",3);
+            if(a.id==="a1000")addItem("tvbeer",3);
+
+            if(a.id==="a10000"){
+                Object.keys(items).forEach(id=>addItem(id,5));
+            }
+
+            setTimeout(()=>alert(`🏆 実績解除！\n${a.name}\n報酬：${a.reward}`),300);
+        }
+    });
+}
+
+function renderAchievementCollection(){
+    const box=document.getElementById("achievementCollection");
+    if(!box)return;
+
+    box.innerHTML=achievements.map(a=>{
+        const unlocked=gachaCount>=a.need;
+        const icon=unlocked?"🏆":"❓";
+
+        return`
+        <div class="achievement-card ${unlocked?"unlocked":"locked"}">
+            <div style="font-size:35px">${icon}</div>
+            <b>${unlocked?a.name:"？？？？？？"}</b>
+            <p>${unlocked
+                ?`ガチャ ${a.need.toLocaleString()}回`
+                :"████████████"}</p>
+            <div class="small">
+                報酬：${unlocked?a.reward:"？？？？"}
+            </div>
+            <div class="progress">
+                <div style="width:${Math.min(100,gachaCount/a.need*100)}%"></div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+/* =========================
+   図鑑
+========================= */
+
+function renderCharacterCollection(){
+    const locked=document.getElementById("collectionLocked");
+    const content=document.getElementById("collectionContent");
+
+    if(!collectionUnlocked){
+        locked.classList.remove("hidden");
+        content.classList.add("hidden");
+        return;
+    }
+
+    locked.classList.add("hidden");
+    content.classList.remove("hidden");
+
+    const countable=characters.filter(
+        c=>c.rarity!=="SECRET"&&c.rarity!=="ADMIN"
+    );
+
+    const got=countable.filter(
+        c=>discovered.includes(c.id)
+    ).length;
+
+    document.getElementById("collectionCount").textContent=
+        `${got}/${countable.length}`;
+
+    document.getElementById("characterCollection").innerHTML=
+        characters.map(c=>{
+            const got=discovered.includes(c.id);
+
+            /* SECRET・ADMIN・EXは未入手なら表示しない */
+            if((c.rarity==="SECRET"||c.rarity==="ADMIN"||c.rarity==="EX")&&!got)
+                return"";
+
+            return`
+            <div class="collection-card rarity-${c.rarity} ${got?"":"locked-card"}">
+                <div class="icon">${got?c.icon:"❓"}</div>
+                <div class="badge">${got?c.rarity:"???"}</div>
+                <h3>${got?c.name:"？？？？"}</h3>
+                <p class="small">${got?c.description:"まだ入手していません"}</p>
+                ${c.limited?`<span class="badge">LIMITED</span>`:""}
+            </div>`;
+        }).join("");
+}
+
+function renderItemCollection(){
+    document.getElementById("itemCollection").innerHTML=
+        Object.values(items)
+        .filter(i=>!i.hiddenEncyclopedia)
+        .map(i=>`
+            <div class="item-card">
+                <div class="icon">${i.icon}</div>
+                <b>${i.name}</b>
+                <p class="small">${i.description}</p>
+                <p class="small">入手：${i.acquisition}</p>
+            </div>
+        `).join("");
+}
+
+/* =========================
+   アイテム
+========================= */
+
+function renderInventory(){
+    const box=document.getElementById("inventory");
+    const owned=Object.keys(itemsInventory)
+        .filter(id=>itemsInventory[id]>0);
+
+    if(!owned.length){
+        box.innerHTML="<p class='small'>所持アイテムはありません。</p>";
+        return;
+    }
+
+    box.innerHTML=owned.map(id=>{
+        const item=items[id];
+        const amount=itemsInventory[id];
+
+        return`
+        <div class="item-card" style="margin-bottom:10px">
+            <div class="icon">${item.icon}</div>
+            <b>${item.name}</b>
+            <p>所持数：${amount}</p>
+            <button onclick="useItem('${id}')">使用</button>
+        </div>`;
+    }).join("");
+}
+
+function useItem(id){
+    if(!itemsInventory[id])return;
+
+    if(id==="tvbeer"){
+        removeItem(id);
+        tvBeerActive=true;
+        alert("📺🍻 テレビールを使用しました！\n次のガチャがSR以上になります。");
+    }
+
+    else if(id==="golddonut"){
+        removeItem(id);
+        addCoins(300);
+        alert("🍩🟨 300コイン獲得！");
+    }
+
+    else if(id==="redpotion"){
+        const n=prompt("1〜6の数字を選んでください。");
+        const num=Number(n);
+
+        if(!Number.isInteger(num)||num<1||num>6){
+            alert("1〜6で入力してください。");
+            return;
+        }
+
+        removeItem(id);
+        redPotionTarget=num;
+        alert(`🍷 次のチンチロで ${num} が2個固定されます！`);
+    }
+
+    else if(id==="pumpkinpotion"){
+        removeItem(id);
+
+        const c=getCharacter("halloween");
+        const duplicate=obtainCharacter(c);
+
+        if(duplicate)
+            alert("🎃 パンプキンポーションを使用！\nハロウィンマンは重複したため50コインになりました。");
+        else
+            alert("🎃👻🍭 ハロウィンマンを入手しました！");
+    }
+
+    renderInventory();
+    renderCharacterCollection();
+}
+
+/* =========================
+   ショップ
+========================= */
+
+function renderShop(){
+    const products=[
+        {name:"🎰 30連ガチャ解放",price:3000,
+            bought:unlockedPulls["30"],
+            action:"buyPull(30,3000)"},
+        {name:"🎰 50連ガチャ解放",price:5000,
+            bought:unlockedPulls["50"],
+            action:"buyPull(50,5000)"},
+        {name:"🎰 100連ガチャ解放",price:15000,
+            bought:unlockedPulls["100"],
+            action:"buyPull(100,15000)"},
+        {name:"🍷 レッドポーション",price:7500,
+            action:"buyItem('redpotion',7500)"},
+        {name:"📺🍻 テレビール",price:5000,
+            action:"buyItem('tvbeer',5000)"}
+    ];
+
+    document.getElementById("shopContent").innerHTML=
+        products.map(p=>`
+        <div class="card shop-item">
+            <div class="shop-info">
+                <b>${p.name}</b>
+                <div class="small">${p.price.toLocaleString()}コイン</div>
+            </div>
+            <button
+                ${p.bought?"disabled":""}
+                onclick="${p.action}">
+                ${p.bought?"解放済み":"購入"}
+            </button>
+        </div>
+        `).join("");
+}
+
+function buyPull(n,price){
+    if(unlockedPulls[String(n)])return;
+
+    if(!spendCoins(price))return;
+
+    unlockedPulls[String(n)]=true;
+    save("unlockedPulls",unlockedPulls);
+    renderPullButtons();
+    renderShop();
+    alert(`${n}連ガチャを解放しました！`);
+}
+
+function buyItem(id,price){
+    if(!spendCoins(price))return;
+
+    addItem(id,1);
+    renderInventory();
+    alert(`${items[id].name}を購入しました！`);
+}
+
+/* =========================
+   コード
+========================= */
+
+function redeemCode(){
+    const input=document.getElementById("codeInput");
+    const code=input.value;
+
+    if(!codes[code]){
+        alert("❌ 無効なコードです。");
+        return;
+    }
+
+    if(redeemedCodes.includes(code)){
+        alert("⚠️ このコードは使用済みです。");
+        return;
+    }
+
+    const reward=codes[code];
+
+    if(reward.coins)
+        addCoins(reward.coins);
+
+    if(reward.items){
+        Object.entries(reward.items)
+            .forEach(([id,n])=>addItem(id,n));
+    }
+
+    redeemedCodes.push(code);
+    save("redeemedCodes",redeemedCodes);
+
+    let message="🎁 コード報酬を獲得！";
+
+    if(reward.coins)
+        message+=`\n🪙 +${reward.coins}コイン`;
+
+    if(reward.items){
+        Object.entries(reward.items).forEach(([id,n])=>{
+            message+=`\n${items[id].icon} ${items[id].name} ×${n}`;
+        });
+    }
+
+    input.value="";
+    renderInventory();
+    alert(message);
+}
+
+/* =========================
+   ログイン
+========================= */
+
+function renderLogin(){
+    const box=document.getElementById("loginContent");
+    const today=new Date().toDateString();
+
+    if(lastLogin===today){
+        box.innerHTML="<p>🎁 本日のログインボーナスは受け取り済みです！</p>";
+        return;
+    }
+
+    box.innerHTML=`
+        <p>本日のボーナス：<b>100コイン</b></p>
+        <button onclick="claimLogin()">🎁 受け取る</button>
+    `;
+}
+
+function claimLogin(){
+    const today=new Date().toDateString();
+
+    if(lastLogin===today)return;
+
+    addCoins(100);
+    lastLogin=today;
+    localStorage.setItem("lastLogin",lastLogin);
+
+    renderLogin();
+    alert("🎁 100コイン獲得！");
+}
+
+/* =========================
+   ターゲット
+========================= */
+
+function startTargetGame(){
+    if(targetRunning)return;
+
+    document.getElementById("targetGame").classList.remove("hidden");
+    document.getElementById("chinchiroGame").classList.add("hidden");
+    document.getElementById("luckGame").classList.add("hidden");
+
+    targetScore=0;
+    targetRunning=true;
+
+    document.getElementById("targetScore").textContent=0;
+
+    let time=30;
+    document.getElementById("targetTime").textContent=time;
+
+    clearInterval(targetTimer);
+
+    targetTimer=setInterval(()=>{
+        time--;
+        document.getElementById("targetTime").textContent=time;
+
+        if(time<=0){
+            clearInterval(targetTimer);
+            clearTimeout(targetSpawnTimer);
+            targetRunning=false;
+
+            if(targetScore>highScore){
+                highScore=targetScore;
+                localStorage.setItem("targetHighScore",highScore);
+            }
+
+            const reward=getTargetReward(targetScore);
+
+            if(reward)addCoins(reward);
+
+            alert(`🎯 終了！\nスコア：${targetScore}\n報酬：${reward}コイン`);
+        }
+    },1000);
+
+    spawnTarget();
+}
+
+function spawnTarget(){
+    if(!targetRunning)return;
+
+    const button=document.getElementById("targetButton");
+    const gold=Math.random()<.05;
+
+    button.textContent=gold?"🍩":"🎯";
+    button.dataset.gold=gold?"1":"0";
+
+    clearTimeout(targetSpawnTimer);
+
+    targetSpawnTimer=setTimeout(spawnTarget,700);
+}
+
+function hitTarget(){
+    if(!targetRunning)return;
+
+    targetScore++;
+    document.getElementById("targetScore").textContent=targetScore;
+
+    const button=document.getElementById("targetButton");
+
+    if(button.dataset.gold==="1"){
+        addItem("golddonut",1);
+        alert("🍩🟨 ゴールドドーナツを獲得！");
+    }
+
+    spawnTarget();
+}
+
+function getTargetReward(score){
+    if(score<5)return 0;
+    if(score<10)return 50;
+    if(score<20)return 100;
+    if(score<30)return 200;
+    if(score<40)return 300;
+    if(score<50)return 500;
+
+    return 500+Math.floor((score-40)/10)*50;
+}
+
+/* =========================
+   チンチロ
+========================= */
+
+function showChinchiro(){
+    document.getElementById("targetGame").classList.add("hidden");
+    document.getElementById("luckGame").classList.add("hidden");
+    document.getElementById("chinchiroGame").classList.remove("hidden");
+}
+
+function showLuck(){
+    document.getElementById("targetGame").classList.add("hidden");
+    document.getElementById("chinchiroGame").classList.add("hidden");
+    document.getElementById("luckGame").classList.remove("hidden");
+}
+
+function rollDie(){
+    return Math.floor(Math.random()*6)+1;
+}
+
+function diceEmoji(n){
+    return["","⚀","⚁","⚂","⚃","⚄","⚅"][n];
+}
+
+function playChinchiro(){
+    if(chinchiroCooldown>0){
+        alert(`あと${chinchiroCooldown}回待ってください。`);
+        return;
+    }
+
+    const bet=Number(document.getElementById("chinchiroBet").value);
+
+    if(!spendCoins(bet))return;
+
+    let dice;
+
+    if(adminForcedChinchiroNumber){
+        dice=[
+            adminForcedChinchiroNumber,
+            adminForcedChinchiroNumber,
+            adminForcedChinchiroNumber
+        ];
+        adminForcedChinchiroNumber=null;
+    }
+    else if(redPotionTarget){
+        dice=[
+            redPotionTarget,
+            redPotionTarget,
+            rollDie()
+        ];
+        redPotionTarget=null;
+    }
+    else{
+        dice=[rollDie(),rollDie(),rollDie()];
+    }
+
+    const triple=
+        dice[0]===dice[1]&&dice[1]===dice[2];
+
+    let reward=0;
+
+    if(triple){
+        if(dice[0]===1)reward=500;
+        else reward=300;
+    }
+
+    let finalReward=reward;
+
+    if(chinchiroBetRounds>0){
+        finalReward=Math.floor(reward*chinchiroMultiplier);
+        chinchiroBetRounds--;
+    }
+
+    addCoins(finalReward);
+
+    document.getElementById("chinchiroResult").innerHTML=`
+        <h2>${dice.map(diceEmoji).join(" ")}</h2>
+        <p>${triple?"🎉 ゾロ目！":"残念！"}</p>
+        <p>報酬：${finalReward}コイン</p>
+    `;
+
+    chinchiroCooldown=5;
+    clearInterval(chinchiroCooldownTimer);
+
+    chinchiroCooldownTimer=setInterval(()=>{
+        chinchiroCooldown--;
+
+        if(chinchiroCooldown<=0){
+            clearInterval(chinchiroCooldownTimer);
+            chinchiroCooldownTimer=null;
+        }
+    },1000);
+}
+
+/* =========================
+   運試し
+========================= */
+
+function playLuck(){
+    const bet=Number(document.getElementById("luckBet").value);
+    const choice=Number(document.getElementById("luckChoice").value);
+
+    if(!Number.isFinite(bet)||bet<=0){
+        alert("正しい金額を入力してください。");
+        return;
+    }
+
+    if(!spendCoins(bet))return;
+
+    let result;
+
+    if(adminForcedLuckNumber){
+        result=adminForcedLuckNumber;
+        adminForcedLuckNumber=null;
+    }
+    else{
+        result=Math.floor(Math.random()*10)+1;
+    }
+
+    if(result===choice){
+        addCoins(bet*2);
+        document.getElementById("luckResult").innerHTML=
+            `<h2>🎉 当たり！</h2><p>${result}でした！</p><p>+${bet*2}コイン</p>`;
+    }
+    else{
+        document.getElementById("luckResult").innerHTML=
+            `<h2>💨 はずれ</h2><p>${result}でした。</p>`;
+    }
+}
+
+/* =========================
+   ADMIN
+========================= */
+
+function unlockAdmin(){
+    if(document.getElementById("adminCode").value!=="ADMIN2026"){
+        alert("❌ ADMINコードが違います。");
+        return;
+    }
+
+    adminUnlocked=true;
+    document.getElementById("adminContent").classList.remove("hidden");
+    fillAdminLists();
+    alert("🔴 ADMIN権限を取得しました！");
+}
+
+function fillAdminLists(){
+    document.getElementById("adminCharacter").innerHTML=
+        characters.map(c=>
+            `<option value="${c.id}">${c.rarity} ${c.icon} ${c.name}</option>`
+        ).join("");
+
+    document.getElementById("adminGiveCharacter").innerHTML=
+        document.getElementById("adminCharacter").innerHTML;
+
+    document.getElementById("adminGiveItem").innerHTML=
+        Object.values(items).map(i=>
+            `<option value="${i.id}">${i.icon} ${i.name}</option>`
+        ).join("");
+}
+
+function adminSetCoins(){
+    if(!adminUnlocked)return;
+
+    const n=Math.max(0,Number(document.getElementById("adminCoins").value));
+
+    coins=n;
+    localStorage.setItem("coins",coins);
+    updateCoins();
+
+    alert(`🪙 コインを${n}に設定しました。`);
+}
+
+function adminSetGachaCharacter(){
+    if(!adminUnlocked)return;
+
+    adminForcedGachaCharacter=
+        document.getElementById("adminCharacter").value;
+
+    alert("🎰 次回以降のガチャキャラを固定しました。");
+}
+
+function adminClearGachaCharacter(){
+    adminForcedGachaCharacter=null;
+    alert("🎰 ガチャキャラ固定を解除しました。");
+}
+
+function adminSetChinchiro(){
+    const n=Number(document.getElementById("adminChinchiro").value);
+
+    adminForcedChinchiroNumber=n||null;
+
+    alert(n?`🎲 次のチンチロを${n}${n}${n}にします。`:"解除しました。");
+}
+
+function adminSetLuck(){
+    const n=Number(document.getElementById("adminLuck").value);
+
+    adminForcedLuckNumber=n||null;
+
+    alert(n?`🍀 次の運試しを${n}にします。`:"解除しました。");
+}
+
+function adminCollection(unlock){
+    if(!adminUnlocked)return;
+
+    collectionUnlocked=unlock;
+    localStorage.setItem("collectionUnlocked",unlock);
+
+    renderCharacterCollection();
+
+    alert(unlock?"📖 図鑑を解放しました！":"🔒 図鑑をロックしました！");
+}
+
+function adminGiveCharacter(){
+    if(!adminUnlocked)return;
+
+    const c=getCharacter(
+        document.getElementById("adminGiveCharacter").value
+    );
+
+    if(!c)return;
+
+    const duplicate=obtainCharacter(c);
+
+    renderCharacterCollection();
+
+    if(duplicate)
+        alert(`${c.name}はすでに所持しています。\n重複として50コインに変換しました。`);
+    else
+        alert(`${c.icon} ${c.name}を入手しました！`);
+}
+
+function adminGacha(){
+    if(!adminUnlocked)return;
+
+    const n=Math.floor(Number(document.getElementById("adminGachaCount").value));
+
+    if(!Number.isFinite(n)||n<1){
+        alert("1以上の回数を入力してください。");
+        return;
+    }
+
+    if(n>10000){
+        alert("一度に引ける最大回数は10,000回です。");
+        return;
+    }
+
+    doGacha(n,0,true);
+}
+
+function adminGiveItem(){
+    if(!adminUnlocked)return;
+
+    const id=document.getElementById("adminGiveItem").value;
+    const n=Math.floor(Number(document.getElementById("adminItemAmount").value));
+
+    if(!Number.isFinite(n)||n<1){
+        alert("1以上の個数を入力してください。");
+        return;
+    }
+
+    addItem(id,n);
+    renderInventory();
+
+    alert(`${items[id].name} ×${n} を付与しました！`);
+}
+
+/* =========================
+   ガチャ演出スキップ
+========================= */
+
+function toggleGachaSkip(){
+    gachaSkip=!gachaSkip;
+    localStorage.setItem("gachaSkip",gachaSkip);
+    updateSkipButton();
+}
+
+function updateSkipButton(){
+    const button=document.getElementById("skipButton");
+    if(!button)return;
+
+    button.textContent=
+        `ガチャ演出スキップ：${gachaSkip?"ON":"OFF"}`;
+}
+
+/* =========================
+   BGM
+========================= */
+
+let bgmStarted=false;
+
+function startBgmOnce(){
+    if(bgmStarted)return;
+
+    bgmStarted=true;
+
+    bgm.play().catch(()=>{});
+}
+
+/* =========================
+   データ削除
+========================= */
+
+function deleteGameData(){
+    if(!confirm(
+        "本当にゲームデータをすべて削除しますか？\n\n"+
+        "コイン、キャラクター、アイテム、"+
+        "ショップ解放、名前、実績などが削除されます。"
+    ))return;
+
+    [
+        "coins",
+        "discovered",
+        "redeemedCodes",
+        "targetHighScore",
+        "lastLogin",
+        "loginDay",
+        "itemsInventory",
+        "unlockedPulls",
+        "playerName",
+        "gachaCount",
+        "achievementsClaimed",
+        "collectionUnlocked",
+        "gachaSkip",
+        "musicEnabled"
+    ].forEach(k=>localStorage.removeItem(k));
+
+    coins=0;
+    discovered=[];
+    redeemedCodes=[];
+    itemsInventory={};
+
+    unlockedPulls={
+        "30":false,
+        "50":false,
+        "100":false
+    };
+
+    playerName="";
+    highScore=0;
+    lastLogin="";
+    gachaCount=0;
+    achievementsClaimed=[];
+    collectionUnlocked=true;
+    gachaSkip=false;
+
+    adminUnlocked=false;
+    adminForcedGachaCharacter=null;
+    adminForcedChinchiroNumber=null;
+    adminForcedLuckNumber=null;
+
+    tvBeerActive=false;
+    redPotionTarget=null;
+
+    chinchiroBetRounds=0;
+    chinchiroMultiplier=1;
+    chinchiroCooldown=0;
+
+    clearInterval(chinchiroCooldownTimer);
+    clearInterval(targetTimer);
+    clearTimeout(targetSpawnTimer);
+
+    currentGachaResults=[];
+    displayedResultCount=0;
+    gachaBusy=false;
+
+    document.body.classList.remove("gacha-shaking");
+    document.getElementById("gachaLockOverlay").classList.add("hidden");
+
+    bgm.pause();
+    bgm.currentTime=0;
+    bgmStarted=false;
+
+    document.getElementById("nameOverlay").classList.remove("hidden");
+    document.getElementById("nameInput").value="";
+    document.getElementById("adminContent").classList.add("hidden");
+
+    updateAll();
+    updateOrientation();
+
+    alert("🗑️ ゲームデータを削除しました。");
+}
+
+/* =========================
+   起動
+========================= */
+
+function init(){
+    if(playerName){
+        document.getElementById("nameOverlay").classList.add("hidden");
+        document.getElementById("welcomeText").textContent=
+            `ようこそ、${playerName}さん！`;
+    }
+
+    fillAdminLists();
+    updateAll();
+    updateOrientation();
+}
+
+init();
+</script>
+
+</body>
+</html>
